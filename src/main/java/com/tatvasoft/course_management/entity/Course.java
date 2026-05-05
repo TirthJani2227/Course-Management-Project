@@ -1,6 +1,6 @@
 package com.tatvasoft.course_management.entity;
 
-import com.tatvasoft.course_management.enums.Role;
+import com.tatvasoft.course_management.enums.Department;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,7 +8,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,18 +18,18 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "users", indexes = {@Index(name = "user_idx", columnList = "id,email, role", unique = true)}, uniqueConstraints = @UniqueConstraint(columnNames= {"email","role"}))
-public class User extends BaseEntity {
+@Table(indexes = { @Index(name = "course_idx", columnList = "id, name, department", unique = true) })
+public class Course extends BaseEntity {
 	@Column(nullable = false,length = 150)
 	private String name;
 	
-	@Column(nullable = false,length = 150)
-	private String email;
-	
+	@Column(nullable = false,length = 255)
+	private String content;
+
 	@Column(nullable = false)
-	private String password;
+	private Integer credits;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(length = 10)
-    private Role role;
+	@Column(length = 50)
+	private Department department;
 }
