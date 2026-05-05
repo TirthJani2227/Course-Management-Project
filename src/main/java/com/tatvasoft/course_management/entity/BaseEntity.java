@@ -20,7 +20,6 @@ import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotNull;
 
 @MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +38,7 @@ public abstract class BaseEntity {
 	@JoinColumn(name = "modified_by")
 	private User modifiedBy;
 
-	@NotNull
+	@Column(name="is_deleted", nullable = false)
 	private Boolean isDeleted = false;
 
 	@PrePersist

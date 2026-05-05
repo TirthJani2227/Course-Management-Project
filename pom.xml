@@ -7,7 +7,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.5.14</version>
-		<relativePath /> <!-- lookup parent from repository -->
+		<relativePath />
 	</parent>
 	<groupId>com.tatvasoft</groupId>
 	<artifactId>course-management</artifactId>
@@ -85,11 +85,6 @@
 			<scope>test</scope>
 		</dependency>
 		-->
-		<dependency>
-			<groupId>com.homecare</groupId>
-			<artifactId>homecare</artifactId>
-			<version>1.0.0</version>
-		</dependency>
 	</dependencies>
 
 	<build>

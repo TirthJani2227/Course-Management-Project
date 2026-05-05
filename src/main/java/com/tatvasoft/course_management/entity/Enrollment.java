@@ -45,11 +45,4 @@ public class Enrollment extends BaseEntity {
 
 	@Column(name = "completed_at")
 	private LocalDateTime completedAt;
-
-	@PrePersist
-	public void onCreate() {
-		this.enrolledAt = LocalDateTime.now();
-		this.status = Status.COMPLETED;
-		this.completedAt = LocalDateTime.now();
-	}
 }

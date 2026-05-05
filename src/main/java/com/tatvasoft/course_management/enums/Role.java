@@ -1,6 +1,5 @@
 package com.tatvasoft.course_management.enums;
 
 public enum Role {
-	Admin,
-	Student
+    ADMIN, STUDENT
 }

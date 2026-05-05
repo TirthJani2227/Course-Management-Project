@@ -9,6 +9,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,7 +20,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(indexes = { @Index(name = "course_idx", columnList = "id, name, department", unique = true) })
+@Table(indexes = { @Index(name = "course_idx", columnList = "name, department", unique = true) })
 public class Course extends BaseEntity {
 	@Column(nullable = false,length = 150)
 	private String name;
@@ -27,6 +29,7 @@ public class Course extends BaseEntity {
 	private String content;
 
 	@Column(nullable = false)
+	@Min(1) @Max(6)
 	private Integer credits;
 	
 	@Enumerated(EnumType.STRING)

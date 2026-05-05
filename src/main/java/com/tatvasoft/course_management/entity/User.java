@@ -19,7 +19,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "users", indexes = {@Index(name = "user_idx", columnList = "id,email, role", unique = true)}, uniqueConstraints = @UniqueConstraint(columnNames= {"email","role"}))
+@Table(name= "users", indexes = {@Index(name = "user_idx", columnList = "id, email, role", unique = true)}, uniqueConstraints = @UniqueConstraint(columnNames= {"email","role"}))
 public class User extends BaseEntity {
 	@Column(nullable = false,length = 150)
 	private String name;
