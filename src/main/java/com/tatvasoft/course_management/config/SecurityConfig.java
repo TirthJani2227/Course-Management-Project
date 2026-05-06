@@ -34,7 +34,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll().
                         requestMatchers("/api/v1/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/courses/**").authenticated().anyRequest().denyAll())
+                        .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
+                        .requestMatchers("/api/courses/**").hasRole("ADMIN")
+                        .requestMatchers("/api/**")
+                        .authenticated().anyRequest().denyAll())
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -25,9 +25,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new InvalidInputException("Email must not be blank");
         }
 
-        return userRepository.findByEmailAndIsDeletedFalse(email)
-                .orElseThrow(() -> new UserNotFoundException(
-                        "No active user found with email: " + email
-                ));
+        return userRepository.findByEmailAndIsDeletedFalse(email).orElseThrow(() -> new UserNotFoundException("No active user found with email: " + email));
     }
 }

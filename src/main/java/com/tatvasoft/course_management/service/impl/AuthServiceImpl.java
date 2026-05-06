@@ -7,8 +7,9 @@ import com.tatvasoft.course_management.exception.InvalidInputException;
 import com.tatvasoft.course_management.repository.UserRepository;
 import com.tatvasoft.course_management.service.AuthService;
 import com.tatvasoft.course_management.service.JwtService;
-import com.tatvasoft.course_management.util.PasswordUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.tatvasoft.course_management.util.PasswordUtil;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -21,6 +22,7 @@ public class AuthServiceImpl implements AuthService {
         this.jwtService = jwtService;
     }
 
+    @Transactional
     @Override
     public String loginStudent(String email, String password) {
         if (email == null || password == null)
@@ -38,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+    @Transactional
     @Override
     public String registerStudent(String email, String password, String name) {
         if (email == null || password == null || name == null)
@@ -60,6 +63,7 @@ public class AuthServiceImpl implements AuthService {
         return jwtService.generateToken(newUser);
     }
 
+    @Transactional
     @Override
     public String registerAdmin(String email, String password, String name, User admin) {
         if (email == null || password == null || name == null)
@@ -72,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
 
         User newAdmin = new User();
         newAdmin.setEmail(email);
-        newAdmin.setRole(Role.STUDENT);
+        newAdmin.setRole(Role.ADMIN);
         newAdmin.setName(name);
         String hashedPassword = PasswordUtil.hashPassword(password);
         newAdmin.setPassword(hashedPassword);
@@ -81,9 +85,10 @@ public class AuthServiceImpl implements AuthService {
         return jwtService.generateToken(admin);
     }
 
+    @Transactional
     @Override
     public String loginAdmin(String email, String password) {
-        if (email == null || password == null)
+        if (email == null || password == null || email.trim().isEmpty() || password.trim().isEmpty())
             throw new InvalidInputException("Invalid Input");
 
         User admin = repository.findByEmailAndIsDeletedFalse(email).orElse(null);

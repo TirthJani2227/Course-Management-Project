@@ -6,8 +6,10 @@ import com.tatvasoft.course_management.entity.User;
 import com.tatvasoft.course_management.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,7 +36,7 @@ public class AuthController {
     public ResponseEntity<ApiResponseDTO<String>> registerStudent(@Valid @RequestBody AuthRequestDTO.Register dto, HttpServletResponse res) {
         String token = authService.registerStudent(dto.getEmail(), dto.getPassword(), dto.getName());
         setTokenCookie(res, "auth_token", token, 86400, "/");
-        return ResponseEntity.ok(ApiResponseDTO.success("Registered successfully", token));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDTO.success("Registered successfully", token));
     }
 
     @PostMapping("/admin/login")
@@ -48,9 +50,15 @@ public class AuthController {
     public ResponseEntity<ApiResponseDTO<String>> registerAdmin(@Valid @RequestBody AuthRequestDTO.Register dto, HttpServletResponse res, Authentication authentication) {
         User admin = (User) authentication.getPrincipal();
         String token = authService.registerAdmin(dto.getEmail(), dto.getPassword(), dto.getName(), admin);
-        return ResponseEntity.ok(ApiResponseDTO.success("Registered Admin successfully", token));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDTO.success("Registered Admin successfully", token));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponseDTO<Void>> logout(HttpServletResponse res) {
+        res.setHeader("Set-Cookie", "auth_token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict");
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok(ApiResponseDTO.success("Logged out successfully"));
+    }
 
     private void setTokenCookie(HttpServletResponse response, String name,
                                 String value, int maxAge, String path) {
