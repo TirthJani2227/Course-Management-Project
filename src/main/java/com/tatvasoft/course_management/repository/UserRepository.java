@@ -11,5 +11,7 @@ import com.tatvasoft.course_management.enums.Role;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>{
-	Optional<User> findByEmail(String email,Role role);
+	Optional<User> findByEmailAndRoleAndIsDeletedFalse(String email,Role role);
+    Optional<User> findByEmailAndIsDeletedFalse(String email);
+    boolean existsByEmailAndRole(String email, Role role);
 }

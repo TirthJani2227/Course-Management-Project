@@ -1,86 +1,83 @@
 package com.tatvasoft.course_management.filter;
 
 import com.tatvasoft.course_management.entity.User;
-import com.tatvasoft.course_management.service.AuthService;
+import com.tatvasoft.course_management.repository.UserRepository;
 import com.tatvasoft.course_management.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
+import io.jsonwebtoken.Claims;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+
+
+@Component
 public class AuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final AuthService authService;
+    private final UserRepository userRepository;
+    private final HandlerExceptionResolver handlerExceptionResolver;
 
-    @Autowired
-    public AuthFilter(JwtService jwtService, AuthService authService){
+    public AuthFilter(JwtService jwtService, UserRepository userRepository, HandlerExceptionResolver handlerExceptionResolver) {
         this.jwtService = jwtService;
-        this.authService = authService;
+        this.userRepository = userRepository;
+        this.handlerExceptionResolver = handlerExceptionResolver;
     }
 
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        final String jwt = extractJwtFromCookie(request, "auth_token");
-        if (jwt == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        final String userEmail;
-        final String userRole;
         try {
-            userEmail = jwtService.extractEmail(jwt);
-            userRole = jwtService.extractClaim(jwt, (Map<String, String> map) -> {return map.getOrDefault("role", null)});
-        } catch (Exception e) {
-            clearCookieAndSendError(response, "auth_token", HttpServletResponse.SC_UNAUTHORIZED,
-                    "Invalid or malformed JWT token");
-            return;
-        }
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-            User user = authService.getUserEmailAndRole(userEmail, userRole);
-            if (user == null) {
-                clearCookieAndSendError(response, "auth_token", HttpServletResponse.SC_UNAUTHORIZED,
-                        "Admin not found");
+            final String jwt = extractJwtFromCookie(request, "auth_token");
+            if (jwt == null) {
+                filterChain.doFilter(request, response);
                 return;
             }
 
-            if (jwtService.isTokenValid(jwt, user)) {
-                clearCookieAndSendError(response, "auth_token", HttpServletResponse.SC_UNAUTHORIZED,
-                        "JWT token has expired. Please login again");
+            final String userEmail;
+            final String userRole;
+            try {
+                userEmail = jwtService.extractEmail(jwt);
+                userRole = jwtService.extractClaim(jwt, (Claims claims) -> {
+                    return claims.get("role");
+                }).toString();
+            } catch (Exception e) {
+                clearCookieAndSendError(response, "auth_token", HttpServletResponse.SC_UNAUTHORIZED, "Invalid or malformed JWT token");
                 return;
             }
+            if (userEmail != null && userRole != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
+                User user = userRepository.findByEmailAndIsDeletedFalse(userEmail).orElse(null);
+                if (user == null) {
+                    clearCookieAndSendError(response, "auth_token", HttpServletResponse.SC_UNAUTHORIZED, "User not found");
+                    return;
+                }
 
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(adminDetails, null,
-                    List.of(new SimpleGrantedAuthority(userRole)));
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (!jwtService.isTokenValid(jwt, user)) {
+                    clearCookieAndSendError(response, "auth_token", HttpServletResponse.SC_UNAUTHORIZED, "JWT token has expired. Please login again");
+                    return;
+                }
 
-            request.setAttribute("loggedInUser", user);
+                // THis helps to set the user in the spring security context and we can access .hasRole("") after this
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+
+            filterChain.doFilter(request, response);
+        } catch (Exception ex) {
+            handlerExceptionResolver.resolveException(request,response,null,ex);
         }
-
-        filterChain.doFilter(request, response);
-
-
     }
 
     private String extractJwtFromCookie(HttpServletRequest request, String cookieName) {
-        if (request.getCookies() == null)
-            return null;
+        if (request.getCookies() == null) return null;
         for (Cookie cookie : request.getCookies()) {
             if (cookieName.equals(cookie.getName())) {
                 String value = cookie.getValue();
@@ -90,8 +87,7 @@ public class AuthFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private void clearCookieAndSendError(HttpServletResponse response, String cookieName, int statusCode,
-                                         String message) throws IOException {
+    private void clearCookieAndSendError(HttpServletResponse response, String cookieName, int statusCode, String message) throws IOException {
         Cookie expiredCookie = new Cookie(cookieName, "");
         expiredCookie.setHttpOnly(true);
         expiredCookie.setPath("/");
