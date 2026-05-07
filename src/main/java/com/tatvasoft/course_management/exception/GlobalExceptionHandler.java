@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponseDTO<Void>> handleNotFound(NoHandlerFoundException ex, WebRequest request) {
         log.error("Exception occurred: {}, Request Details: {}", ex.getMessage(), request.getDescription(false), ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponseDTO.error("The requested resource was not found."));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponseDTO<Void>> handleNotFound(NoResourceFoundException ex, WebRequest request) {
+        log.error("Exception occurred: {}, Request Details: {}", ex.getMessage(), request.getDescription(false), ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponseDTO.error("The requested resource was not found."));
+    }
+
+    @ExceptionHandler(NumberFormatException.class)
+    public ResponseEntity<ApiResponseDTO<Void>> handleNumberFormatException(NumberFormatException ex, WebRequest request) {
+        log.error("Exception occurred: {}, Request Details: {}", ex.getMessage(), request.getDescription(false), ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponseDTO.error("The requested resource was not found."));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponseDTO<Void>> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        log.error("Exception occurred: {}, Request Details: {}", ex.getMessage(), request.getDescription(false), ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponseDTO.error(ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -52,7 +71,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponseDTO<Void>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
         log.error("Exception occurred: {}, Request Details: {}", ex.getMessage(), request.getDescription(false), ex);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponseDTO.error(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponseDTO.error("Invalid Path Variable Type"));
     }
 
     @ExceptionHandler(CourseNotFoundException.class)
@@ -83,6 +102,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponseDTO<Void>> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
         log.error("Exception occurred: {}, Request Details: {}", ex.getMessage(), request.getDescription(false), ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponseDTO.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(BusinessLogicException.class)
+    public ResponseEntity<ApiResponseDTO<Void>> handleUserNotFoundException(BusinessLogicException ex, WebRequest request) {
+        log.error("Exception occurred: {}, Request Details: {}", ex.getMessage(), request.getDescription(false), ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponseDTO.error(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

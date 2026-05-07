@@ -30,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = repository.findByEmailAndIsDeletedFalse(email).orElse(null);
 
-        if (user == null)
+        if (user == null || user.getRole() != Role.STUDENT)
             throw new InvalidInputException("Invalid Credentials!");
 
         if (!PasswordUtil.verifyPassword(password, user.getPassword()))
@@ -96,7 +96,7 @@ public class AuthServiceImpl implements AuthService {
         if (admin == null)
             throw new InvalidInputException("Invalid Credentials!");
 
-        if (!admin.getRole().toString().equals("ADMIN"))
+        if (admin.getRole() != Role.ADMIN)
             throw new InvalidInputException("Invalid Credentials!");
 
         if (!PasswordUtil.verifyPassword(password, admin.getPassword()))

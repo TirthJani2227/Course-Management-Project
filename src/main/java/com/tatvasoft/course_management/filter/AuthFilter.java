@@ -42,17 +42,13 @@ public class AuthFilter extends OncePerRequestFilter {
             }
 
             final String userEmail;
-            final String userRole;
             try {
                 userEmail = jwtService.extractEmail(jwt);
-                userRole = jwtService.extractClaim(jwt, (Claims claims) -> {
-                    return claims.get("role");
-                }).toString();
             } catch (Exception e) {
                 clearCookieAndSendError(response, "auth_token", HttpServletResponse.SC_UNAUTHORIZED, "Invalid or malformed JWT token");
                 return;
             }
-            if (userEmail != null && userRole != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 User user = userRepository.findByEmailAndIsDeletedFalse(userEmail).orElse(null);
                 if (user == null) {
@@ -72,7 +68,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (Exception ex) {
-            handlerExceptionResolver.resolveException(request,response,null,ex);
+            handlerExceptionResolver.resolveException(request, response, null, ex);
         }
     }
 
@@ -86,6 +82,16 @@ public class AuthFilter extends OncePerRequestFilter {
         }
         return null;
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        if (path.equals("/api/v1/auth/admin/register"))
+            return false;
+
+        return path.startsWith("/api/v1/auth/");
+    }
+
 
     private void clearCookieAndSendError(HttpServletResponse response, String cookieName, int statusCode, String message) throws IOException {
         Cookie expiredCookie = new Cookie(cookieName, "");
